@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 from torch.optim import AdamW, Adam
 from yaml.loader import SafeLoader
-from sklearn.model_selection import train_test_split
+import torch.optim.lr_scheduler as lr_scheduler
 from datetime import datetime
 from tqdm import tqdm
 from time import time
@@ -162,13 +162,24 @@ class Trainer():
         return model
             
     def init_optimizer(self, model):
+        print("start_lr: ", self.config["start_lr"])
+        print("end_lr: ", self.config["end_lr"])
+
         optimizer = Adam(
             params=model.parameters(),
             betas=(self.config["beta1"], self.config["beta2"]),
-            lr=float(self.config["learning_rate"]),
+            lr=self.config["start_lr"],
             weight_decay=float(self.config["weight_decay"]))
         
-        return optimizer
+        scheduler = lr_scheduler.LinearLR(
+            optimizer, 
+            start_factor=self.config["start_lr"], 
+            end_factor=self.config["end_lr"], 
+            total_iters=self.config["total_iters"]
+            )
+
+        
+        return optimizer, scheduler
     
     def prepare_ravdess_dataloader(self, features, labels, masks, mode="train"):
         dataset = SER_Dataset(
@@ -216,7 +227,7 @@ class Trainer():
         print("################# init model ##################")
         model = self.init_model()
         print("############### init optimizer #################")
-        optimizer = self.init_optimizer(model)
+        optimizer, scheduler = self.init_optimizer(model)
         
         model.train()
         step = 0
@@ -244,8 +255,13 @@ class Trainer():
                 step += 1
                 
                 _train_tqdm.set_postfix(
-                    {"loss":loss.item()}
+                    {
+                        "loss":loss.item(),
+                        "lr":optimizer.param_groups[0]["lr"]
+                        }
                 )
+            scheduler.step()
+        
             if (epoch+1) % int(self.config["evaluate_per_epoch"])==0:
                 train_loss = np.mean(train_losses)
                 target_names = list(self.data_config["label"].keys())
