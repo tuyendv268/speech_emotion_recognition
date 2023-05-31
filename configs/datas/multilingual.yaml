@@ -10,12 +10,13 @@ feature: mfcc
 define: &hidden_dim 80
 hidden_dim: *hidden_dim
 
-valid_size: 0.5
+valid_size: 0.005
 
 audio:
   max_duration: 6
   sample_rate: 22050
   max_wav_value: 32768.0
+
 stft:
   filter_length: 1024
   hop_length: 256
@@ -23,7 +24,7 @@ stft:
 
 mel:
   n_mel_channels: 80
-  mel_fmin: 40
+  mel_fmin: 0
   mel_fmax: 8000
 
 label:
