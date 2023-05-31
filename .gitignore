@@ -1,0 +1,10 @@
+data/wavs
+/checkpoints/
+/logs/
+RAVDE.npy
+__pycache__
+/data/
+cleaned_tth_data
+*.npy
+dev.ipynb
+data/

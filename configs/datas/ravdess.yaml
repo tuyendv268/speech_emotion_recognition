@@ -1,0 +1,33 @@
+augment: spec_augment
+wavs_path: cleaned_tth_data/wavs
+label_path: cleaned_tth_data/test.txt
+feature: mfcc
+npy_path: tth_test.npy
+
+train_path: ravdess.npy
+define: &hidden_dim 39
+hidden_dim: *hidden_dim
+
+valid_size: 0.1
+test_size: 0.1
+
+label:
+  neutral: 0
+  angry: 1
+  happy: 2
+  sad: 3
+  calm: 4
+  fearful: 5
+  disgust: 6
+  surprised: 7
+
+audio:
+  sample_rate: 48000
+
+mfcc:
+  hop_length: 256
+  win_length: 1024
+  n_mfcc: *hidden_dim
+  n_mels: 128
+  fmax: 8000
+  fmin: 40
