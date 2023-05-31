@@ -10,7 +10,7 @@ feature: mfcc
 define: &hidden_dim 80
 hidden_dim: *hidden_dim
 
-valid_size: 0.1
+valid_size: 0.5
 
 audio:
   max_duration: 6

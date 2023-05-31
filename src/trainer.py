@@ -48,12 +48,12 @@ class Trainer():
             self.data_config = yaml.load(f, Loader=SafeLoader)
             
         json_obj = json.dumps(self.data_config, indent=4, ensure_ascii=False)
-        logging.info("data config: ")
-        logging.info(json_obj)
+        print("data config: ")
+        print(json_obj)
         
         json_obj = json.dumps(self.config, indent=4, ensure_ascii=False)
-        logging.info("general config: ")
-        logging.info(json_obj)
+        print("general config: ")
+        print(json_obj)
 
         self.prepare_diretories_and_logger()
         self.cre_loss = torch.nn.CrossEntropyLoss()
@@ -92,9 +92,9 @@ class Trainer():
                 self.val_dl = self.prepare_multilingual_dataloader(df=val_df.reset_index(), config=self.data_config, mode="test")
                 self.test_dl = self.prepare_multilingual_dataloader(df=test_df.reset_index(), config=self.data_config, mode="test")
                 
-                logging.info(f"train size: {len(train_df)}")
-                logging.info(f"val size: {len(val_df)} ")
-                logging.info(f"test size: {len(test_df)}")
+                print(f"train size: {len(train_df)}")
+                print(f"val size: {len(val_df)} ")
+                print(f"test size: {len(test_df)}")
             
             
                     
@@ -104,14 +104,14 @@ class Trainer():
         model = self.init_model()
         model_parameters = filter(lambda p: p.requires_grad, model.parameters())
         params = sum([np.prod(p.size()) for p in model_parameters])
-        logging.info(f"num params: {params}")
+        print(f"num params: {params}")
         
     def init_weight(self, layer):
         if isinstance(layer, nn.Linear):
             torch.nn.init.xavier_uniform_(layer.weight)
 
     def set_random_state(self, seed):
-        logging.info(f'set random_seed = {seed}')
+        print(f'set random_seed = {seed}')
         torch.manual_seed(seed)
         torch.cuda.manual_seed(seed)
         # torch.backends.cudnn.deterministic = True
@@ -126,12 +126,12 @@ class Trainer():
         log_dir = f"{self.config['log_dir']}/{current_time}"
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
-            logging.info(f"logging into {log_dir}")
+            print(f"logging into {log_dir}")
             
         checkpoint_dir = self.config["checkpoint_dir"]
         if not os.path.exists(checkpoint_dir):
             os.mkdir(checkpoint_dir)
-            logging.info(f'mkdir {checkpoint_dir}')
+            print(f'mkdir {checkpoint_dir}')
         
         self.writer = SummaryWriter(
             log_dir=log_dir
@@ -205,21 +205,22 @@ class Trainer():
         model_state_dict = state_dict["model_state_dict"]
         optim_state_dict = state_dict["optim_state_dict"]
 
-        logging.info(f'load checkpoint from {path}')        
+        print(f'load checkpoint from {path}')        
         
         return {
             "model_state_dict":model_state_dict,
             "optim_state_dict":optim_state_dict
         }
     def train(self):
-        logging.info("########## start training #########")
-        logging.info("################# init model ##################")
+        print("########## start training #########")
+        print("################# init model ##################")
         model = self.init_model()
-        logging.info("############### init optimizer #################")
+        print("############### init optimizer #################")
         optimizer = self.init_optimizer(model)
         
         model.train()
-        best_acc, best_wa, best_uwa = -1, -1, -1
+        step = 0
+        best_wa = -1
         for epoch in range(int(self.config["n_epoch"])):
             train_losses, valid_losses = [], []
             _train_tqdm = tqdm(self.train_dl, desc=f"Epoch={epoch}")
@@ -240,6 +241,8 @@ class Trainer():
                 train_losses.append(loss.item())
                 optimizer.step()
                 
+                step += 1
+                
                 _train_tqdm.set_postfix(
                     {"loss":loss.item()}
                 )
@@ -248,7 +251,7 @@ class Trainer():
                 target_names = list(self.data_config["label"].keys())
                 
                 model.eval()
-                logging.info(f"start validation (epoch={epoch}): ")
+                print(f"start validation (epoch={epoch}): ")
                 valid_results = self.evaluate(val_dl=self.val_dl, model=model)
                 valid_cls_result = classification_report(
                     y_pred=valid_results["predicts"], 
@@ -256,9 +259,9 @@ class Trainer():
                     output_dict=False, zero_division=0,
                     target_names=target_names)
                 
-                logging.info(f"validation result (epoch={epoch}): \n {valid_cls_result}")
+                print(f"validation result (epoch={epoch}): \n {valid_cls_result}")
                 
-                logging.info(f"start testing (epoch={epoch}): ")
+                print(f"start testing (epoch={epoch}): ")
                 test_results = self.evaluate(val_dl=self.test_dl, model=model)
                 test_results = classification_report(
                     y_pred=test_results["predicts"], 
@@ -268,7 +271,14 @@ class Trainer():
                 
                 model.train()
                 
-                logging.info(f"test result (epoch={epoch}): \n{test_results}")
+                print(f"test result (epoch={epoch}): \n{test_results}")
+                
+                test_results = self.evaluate(val_dl=self.test_dl, model=model)
+                test_results = classification_report(
+                    y_pred=test_results["predicts"], 
+                    y_true=test_results["labels"],
+                    output_dict=True, zero_division=0,
+                    target_names=target_names)
                    
                 valid_cls_result = classification_report(
                     y_pred=valid_results["predicts"], 
@@ -280,10 +290,25 @@ class Trainer():
                     best_wa = valid_cls_result["weighted avg"]["f1-score"]
                     path = f'{self.config["checkpoint_dir"]}/best_war_checkpoint.pt'
                     self.save_checkpoint(path, model=model, optimizer=optimizer, epoch=epoch, loss=train_loss)
-                    logging.info(f"test with current best checkpoint (epoch={epoch}): ")
+                    print(f"test with current best checkpoint (epoch={epoch}): ")
                     self.test(checkpoint=path,test_dl=self.test_dl)                      
                 
-                logging.info("############################################")
+                print("############################################")
+                
+                self.writer.add_scalars(
+                    "Loss", {
+                        "train":train_loss,
+                        "val":valid_results["loss"].tolist()
+                    }, global_step=step
+                )
+                
+                self.writer.add_scalars(
+                    "WA", {
+                        "best":best_wa,
+                        "val":valid_cls_result["weighted avg"]["f1-score"],
+                        "test":test_results["weighted avg"]["f1-score"]
+                    }, global_step=step
+                )
                 
                 json_obj = json.dumps({
                     "weighted_avg":best_wa, 
@@ -293,8 +318,8 @@ class Trainer():
                     }, indent=4, ensure_ascii=False)
                 
                 message = "validation result: \n" + json_obj
-                logging.info(message)
-                logging.info("############################################")
+                print(message)
+                print("############################################")
                                  
     def save_checkpoint(self, path, model, optimizer, epoch, loss):
         state_dict = {
@@ -348,7 +373,7 @@ class Trainer():
             output_dict=False, zero_division=0,
             target_names=target_names)
         
-        logging.info(test_cls_result)
+        print(test_cls_result)
         
         test_cls_result = classification_report(
             y_pred=test_results["predicts"], 
