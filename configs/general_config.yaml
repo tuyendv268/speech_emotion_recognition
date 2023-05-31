@@ -14,9 +14,10 @@ log_dir: logs
 checkpoint_dir: checkpoints
 warm_up: None
 
-start_lr: 0.01
-end_lr: 0.0001
-total_iters: 50
+lr: 0.01
+start_factor: 1.0
+end_factor: 0.05
+total_iters: 20
 
 weight_decay: 1e-6
 beta1: 0.93

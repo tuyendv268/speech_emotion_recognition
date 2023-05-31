@@ -162,19 +162,16 @@ class Trainer():
         return model
             
     def init_optimizer(self, model):
-        print("start_lr: ", self.config["start_lr"])
-        print("end_lr: ", self.config["end_lr"])
-
         optimizer = Adam(
             params=model.parameters(),
             betas=(self.config["beta1"], self.config["beta2"]),
-            lr=self.config["start_lr"],
+            lr=self.config["lr"],
             weight_decay=float(self.config["weight_decay"]))
         
         scheduler = lr_scheduler.LinearLR(
             optimizer, 
-            start_factor=self.config["start_lr"], 
-            end_factor=self.config["end_lr"], 
+            start_factor=self.config["start_factor"], 
+            end_factor=self.config["end_factor"], 
             total_iters=self.config["total_iters"]
             )
 
