@@ -14,7 +14,7 @@ log_dir: logs
 checkpoint_dir: checkpoints
 warm_up: None
 
-lr: 0.01
+lr: 0.05
 start_factor: 1.0
 end_factor: 0.05
 total_iters: 20

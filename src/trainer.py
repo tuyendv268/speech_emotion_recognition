@@ -276,18 +276,15 @@ class Trainer():
                 
                 print(f"start testing (epoch={epoch}): ")
                 test_results = self.evaluate(val_dl=self.test_dl, model=model)
-                test_results = classification_report(
+                test_cls_result = classification_report(
                     y_pred=test_results["predicts"], 
                     y_true=test_results["labels"],
                     output_dict=False, zero_division=0,
                     target_names=target_names)
                 
+                print(f"test result (epoch={epoch}): \n{test_cls_result}")                
                 model.train()
-                
-                print(f"test result (epoch={epoch}): \n{test_results}")
-                
-                test_results = self.evaluate(val_dl=self.test_dl, model=model)
-                test_results = classification_report(
+                test_cls_result = classification_report(
                     y_pred=test_results["predicts"], 
                     y_true=test_results["labels"],
                     output_dict=True, zero_division=0,
@@ -319,7 +316,7 @@ class Trainer():
                     "WA", {
                         "best":best_wa,
                         "val":valid_cls_result["weighted avg"]["f1-score"],
-                        "test":test_results["weighted avg"]["f1-score"]
+                        "test":test_cls_result["weighted avg"]["f1-score"]
                     }, global_step=step
                 )
                 
