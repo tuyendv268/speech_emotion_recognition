@@ -5,7 +5,7 @@ seed: 42
 n_epoch: 100
 device: 'cuda'
 num_worker: 2
-batch_size: 64
+batch_size: 48
 random_seed: 42
 model_config: configs/models/conformer.yaml
 data_config: configs/datas/multilingual.yaml
@@ -17,7 +17,7 @@ warm_up: None
 lr: 0.01
 start_factor: 1.0
 end_factor: 0.05
-total_iters: 20
+total_iters: 50
 
 weight_decay: 1e-6
 beta1: 0.93

@@ -1,11 +1,11 @@
-encoder_dim: 128
-num_layers: 4
+encoder_dim: 256
+num_layers: 6
 num_attention_heads: 4
 feed_forward_expansion_factor: 4
 conv_expansion_factor: 2
-feed_forward_dropout_p: 0.2
-attention_dropout_p: 0.2
-conv_dropout_p: 0.2
+feed_forward_dropout_p: 0.1
+attention_dropout_p: 0.1
+conv_dropout_p: 0.1
 conv_kernel_size: 15
 half_step_residual: true
 
@@ -14,7 +14,7 @@ cnn_kernels:
   - 3
 cnn_channels:
   - 80
-  - 128
-cnn_dropout: 0.2
+  - 256
+cnn_dropout: 0.1
 
-addi_attn_dropout: 0.2
+addi_attn_dropout: 0.1
