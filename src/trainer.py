@@ -297,7 +297,6 @@ class Trainer():
                     target_names=target_names)
                 
                 print(f"test result (epoch={epoch}): \n{test_cls_result}")                
-                model.train()
                 test_cls_result = classification_report(
                     y_pred=test_results["predicts"], 
                     y_true=test_results["labels"],
@@ -316,7 +315,7 @@ class Trainer():
                     self.save_checkpoint(path, model=model, optimizer=optimizer,best_result= best_wa, epoch=epoch, loss=train_loss, step=step)
                     print(f"test with current best checkpoint (epoch={epoch}): ")
                     self.test(checkpoint=path,test_dl=self.test_dl)                      
-                
+                model.train()
                 print("############################################")
                 
                 self.writer.add_scalars(
