@@ -212,12 +212,16 @@ class Trainer():
         
         model_state_dict = state_dict["model_state_dict"]
         optim_state_dict = state_dict["optim_state_dict"]
+        step = state_dict["step"]
+        best_result = state_dict["best_result"]
 
         print(f'load checkpoint from {path}')        
         
         return {
             "model_state_dict":model_state_dict,
-            "optim_state_dict":optim_state_dict
+            "optim_state_dict":optim_state_dict,
+            "step":step,
+            "best_result":best_result
         }
     def train(self):
         print("########## start training #########")
@@ -226,9 +230,19 @@ class Trainer():
         print("############### init optimizer #################")
         optimizer, scheduler = self.init_optimizer(model)
         
-        model.train()
         step = 0
         best_wa = -1
+        if os.path.exists(self.config["resume_ckpt"]):
+            state_dict = self.load_checkpoint(self.config["resume_ckpt"])
+            
+            model.load_state_dict(state_dict["model_state_dict"])
+            optimizer.load_state_dict(state_dict["optim_state_dict"])
+            step = state_dict["step"]
+            best_wa = state_dict["best_result"]
+            
+            print("load checkpoint from: ", self.config["resume_ckpt"])
+        model.train()
+        
         for epoch in range(int(self.config["n_epoch"])):
             train_losses, valid_losses = [], []
             _train_tqdm = tqdm(self.train_dl, desc=f"Epoch={epoch}")
@@ -257,7 +271,7 @@ class Trainer():
                         "lr":optimizer.param_groups[0]["lr"]
                         }
                 )
-            scheduler.step()
+            # scheduler.step()
         
             if (epoch+1) % int(self.config["evaluate_per_epoch"])==0:
                 train_loss = np.mean(train_losses)
@@ -299,7 +313,7 @@ class Trainer():
                 if best_wa < valid_cls_result["weighted avg"]["recall"]:
                     best_wa = valid_cls_result["weighted avg"]["f1-score"]
                     path = f'{self.config["checkpoint_dir"]}/best_war_checkpoint.pt'
-                    self.save_checkpoint(path, model=model, optimizer=optimizer, epoch=epoch, loss=train_loss)
+                    self.save_checkpoint(path, model=model, optimizer=optimizer, epoch=epoch, loss=train_loss, step=step)
                     print(f"test with current best checkpoint (epoch={epoch}): ")
                     self.test(checkpoint=path,test_dl=self.test_dl)                      
                 
@@ -331,12 +345,13 @@ class Trainer():
                 print(message)
                 print("############################################")
                                  
-    def save_checkpoint(self, path, model, optimizer, epoch, loss):
+    def save_checkpoint(self, path, model, optimizer, epoch, loss, step):
         state_dict = {
             "model_state_dict":model.state_dict(),
             "optim_state_dict":optimizer.state_dict(),
             "loss":loss,
             "epoch":epoch,
+            "step":step,
         }
         torch.save(state_dict, path)
 

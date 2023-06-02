@@ -15,7 +15,7 @@ def prepare_data(metadata_path, wav_path):
     
     return metadata
     
-def spec_augment(spec: np.ndarray, num_mask=3, 
+def spec_augment(spec: np.ndarray, num_mask=1, 
                  freq_masking_max_percentage=0.1, time_masking_max_percentage=0.1):
     spec = spec.copy()
     for i in range(num_mask):

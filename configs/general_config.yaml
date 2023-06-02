@@ -2,19 +2,19 @@ define: &sample_rate 22050
 
 mode: train
 seed: 42
-n_epoch: 100
+n_epoch: 200
 device: 'cuda'
 num_worker: 2
 batch_size: 48
 random_seed: 42
 model_config: configs/models/conformer.yaml
 data_config: configs/datas/multilingual.yaml
-
+resume_ckpt: checkpoints/pretrained_ser.pt
 log_dir: logs
 checkpoint_dir: checkpoints
 warm_up: None
 
-lr: 0.01
+lr: 0.001
 start_factor: 1.0
 end_factor: 0.05
 total_iters: 50
