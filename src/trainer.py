@@ -313,7 +313,7 @@ class Trainer():
                 if best_wa < valid_cls_result["weighted avg"]["recall"]:
                     best_wa = valid_cls_result["weighted avg"]["f1-score"]
                     path = f'{self.config["checkpoint_dir"]}/best_war_checkpoint.pt'
-                    self.save_checkpoint(path, model=model, optimizer=optimizer, epoch=epoch, loss=train_loss, step=step)
+                    self.save_checkpoint(path, model=model, optimizer=optimizer,best_result= best_wa, epoch=epoch, loss=train_loss, step=step)
                     print(f"test with current best checkpoint (epoch={epoch}): ")
                     self.test(checkpoint=path,test_dl=self.test_dl)                      
                 
@@ -345,13 +345,14 @@ class Trainer():
                 print(message)
                 print("############################################")
                                  
-    def save_checkpoint(self, path, model, optimizer, epoch, loss, step):
+    def save_checkpoint(self, path, model, best_result,optimizer, epoch, loss, step):
         state_dict = {
             "model_state_dict":model.state_dict(),
             "optim_state_dict":optimizer.state_dict(),
             "loss":loss,
             "epoch":epoch,
             "step":step,
+            "best_result":best_result
         }
         torch.save(state_dict, path)
 
