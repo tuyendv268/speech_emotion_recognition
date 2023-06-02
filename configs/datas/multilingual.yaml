@@ -1,10 +1,10 @@
 augment: spec_augment
 
-wavs_path: /kaggle/input/pretrainserdataset22k/pretrain_ser_dataset/wavs
+wavs_path: data/wavs
 
-train_path: /kaggle/input/pretrainserdataset22k/pretrain_ser_dataset/train.csv
-test_path: /kaggle/input/pretrainserdataset22k/pretrain_ser_dataset/test.csv
-feature: mfcc
+train_path: data/metadata.csv
+test_path: data/metadata.csv
+feature: mel
 
 define: &hidden_dim 80
 hidden_dim: *hidden_dim
